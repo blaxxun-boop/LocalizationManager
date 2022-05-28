@@ -27,7 +27,7 @@ If you have installed ILRepack via NuGet, simply create a file named `ILRepack.t
 ```
 
 Make sure to set the LocalizationManager.dll in your project to "Copy to output directory" in the properties of the DLL and to add a reference to it.
-After that, simply add `using LocalizationManager;` to your mod and use the `LocalizationManager` class, to localize your mod.
+After that, simply add `using LocalizationManager;` to your mod and use the `Localizer` class, to localize your mod.
 
 ## Example project
 
@@ -37,6 +37,7 @@ This adds a Warlock Hat, using the ItemManager and then adds localization for it
 using BepInEx;
 using BepInEx.Configuration;
 using ItemManager;
+using LocalizationManager;
 
 namespace LocalizationTest;
 
@@ -53,15 +54,15 @@ public class LocalizationTest : BaseUnityPlugin
 
 	public void Awake()
 	{
-		LocalizationManager.LocalizationManager.Load(); // Use this to initialize the LocalizationManager
+		Localizer.Load(); // Use this to initialize the LocalizationManager
 
 		warlockHatSmokeScreenSizeIncrease = Config.Bind("Odins Warlock Hat", "Smoke Screen Size Increase", 2f, new ConfigDescription("Radius increase for the smoke screen ability of the Dragon Staff while wearing the Warlock hat.", new AcceptableValueRange<float>(0f, 5f)));
 		warlockHatSmokeScreenDurationIncrease = Config.Bind("Odins Warlock Hat", "Smoke Screen Duration Increase", 120, new ConfigDescription("Duration increase for the smoke screen ability of the Dragon Staff while wearing the Warlock hat in seconds.", new AcceptableValueRange<int>(0, 300)));
 		warlockHatSmokeScreenBlockIncrease = Config.Bind("Odins Warlock Hat", "Smoke Screen Block Chance Increase", 25, new ConfigDescription("Projectile block chance increase for the smoke screen ability of the Dragon Staff while wearing the Warlock hat.", new AcceptableValueRange<int>(0, 100)));
 
-		LocalizationManager.LocalizationManager.AddPlaceholder("pp_odins_warlock_hat_description", "power", warlockHatSmokeScreenBlockIncrease); // This will replace the {power} placeholder in your localization string with the value from the warlockHatSmokeScreenBlockIncrease
-		LocalizationManager.LocalizationManager.AddPlaceholder("pp_odins_warlock_hat_description", "radius", warlockHatSmokeScreenSizeIncrease);
-		LocalizationManager.LocalizationManager.AddPlaceholder("pp_odins_warlock_hat_description", "duration", warlockHatSmokeScreenDurationIncrease, duration => (duration / 60f).ToString("0.#")); // There is another parameter you can use to change the representation of a value. This will convert the seconds from the config entry to minutes for the display string
+		Localizer.AddPlaceholder("pp_odins_warlock_hat_description", "power", warlockHatSmokeScreenBlockIncrease); // This will replace the {power} placeholder in your localization string with the value from the warlockHatSmokeScreenBlockIncrease
+		Localizer.AddPlaceholder("pp_odins_warlock_hat_description", "radius", warlockHatSmokeScreenSizeIncrease);
+		Localizer.AddPlaceholder("pp_odins_warlock_hat_description", "duration", warlockHatSmokeScreenDurationIncrease, duration => (duration / 60f).ToString("0.#")); // There is another parameter you can use to change the representation of a value. This will convert the seconds from the config entry to minutes for the display string
 		
 		Item alchemyEquipment = new("potions", "Odins_Warlock_Hat");
 		alchemyEquipment.Crafting.Add(CraftingTable.Workbench, 5);
