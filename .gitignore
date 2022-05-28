@@ -1,0 +1,6 @@
+bin
+obj
+/packages
+LocalizationManager.sln.DotSettings.user
+.idea
+.vs
