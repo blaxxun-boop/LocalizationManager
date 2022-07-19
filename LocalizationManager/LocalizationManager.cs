@@ -21,6 +21,8 @@ public class Localizer
 
 	private static readonly ConditionalWeakTable<Localization, string> localizationLanguage = new();
 
+	private static readonly List<WeakReference<Localization>> localizationObjects = new();
+
 	private static BaseUnityPlugin? _plugin;
 
 	private static BaseUnityPlugin plugin
@@ -76,11 +78,42 @@ public class Localizer
 		}
 	}
 
+	public static void AddText(string key, string text)
+	{
+		List<WeakReference<Localization>> remove = new();
+		foreach (WeakReference<Localization> reference in localizationObjects)
+		{
+			if (reference.TryGetTarget(out Localization localization))
+			{
+				Dictionary<string, string> texts = loadedTexts[localizationLanguage.GetOrCreateValue(localization)];
+				if (!texts.ContainsKey(key))
+				{
+					texts[key] = text;
+				}
+				if (texts[key] == text)
+				{
+					localization.AddWord(key, text);
+				}
+			}
+			else
+			{
+				remove.Add(reference);
+			}
+		}
+		foreach (WeakReference<Localization> reference in remove)
+		{
+			localizationObjects.Remove(reference);
+		}
+	}
+
 	public static void Load() => LoadLocalization(Localization.instance, Localization.instance.GetSelectedLanguage());
 
 	private static void LoadLocalization(Localization __instance, string language)
 	{
-		localizationLanguage.Remove(__instance);
+		if (!localizationLanguage.Remove(__instance))
+		{
+			localizationObjects.Add(new WeakReference<Localization>(__instance));
+		}
 		localizationLanguage.Add(__instance, language);
 
 		Dictionary<string, string> localizationFiles = Directory.GetFiles(Path.GetDirectoryName(Paths.PluginPath)!, $"{plugin.Info.Metadata.Name}.*", SearchOption.AllDirectories).Where(f => fileExtensions.IndexOf(Path.GetExtension(f)) >= 0).ToDictionary(f => Path.GetFileNameWithoutExtension(f).Split('.')[1], f => f);
