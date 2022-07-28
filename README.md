@@ -11,7 +11,9 @@ Add localization strings to your mod. For each string that can be localized, you
 Download the LocalizationManager.dll from the release section to the right.
 Including the DLL is best done via ILRepack (https://github.com/ravibpatel/ILRepack.Lib.MSBuild.Task). You can load this package (ILRepack.Lib.MSBuild.Task) from NuGet.
 
-If you have installed ILRepack via NuGet, simply create a file named `ILRepack.targets` in your project and copy the following content into the file.
+You will also need to add YamlDotNet (https://github.com/aaubry/YamlDotNet) to your project, to allow it to read YAML and JSON files.
+
+If you have installed ILRepack and YamlDotNet via NuGet, simply create a file named `ILRepack.targets` in your project and copy the following content into the file.
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -19,7 +21,8 @@ If you have installed ILRepack via NuGet, simply create a file named `ILRepack.t
     <Target Name="ILRepacker" AfterTargets="Build">
         <ItemGroup>
             <InputAssemblies Include="$(TargetPath)" />
-            <InputAssemblies Include="$(OutputPath)\LocalizationManager.dll" />
+            <InputAssemblies Include="$(OutputPath)LocalizationManager.dll" />
+	    <InputAssemblies Include="$(OutputPath)YamlDotNet.dll"/>
         </ItemGroup>
         <ILRepack Parallel="true" DebugInfo="true" Internalize="true" InputAssemblies="@(InputAssemblies)" OutputFile="$(TargetPath)" TargetKind="SameAsPrimaryAssembly" LibraryPath="$(OutputPath)" />
     </Target>
