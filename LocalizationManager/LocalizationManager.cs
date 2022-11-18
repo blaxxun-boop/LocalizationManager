@@ -8,6 +8,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using JetBrains.Annotations;
+using UnityEngine;
 using YamlDotNet.Serialization;
 
 namespace LocalizationManager;
@@ -180,10 +181,35 @@ public class Localizer
 		return null;
 	}
 
-	private static byte[]? ReadEmbeddedFileBytes(string name)
+	public static byte[]? ReadEmbeddedFileBytes(string resourceFileName, Assembly containingAssembly = null)
 	{
-		using MemoryStream stream = new();
-		Assembly.GetExecutingAssembly().GetManifestResourceStream(Assembly.GetExecutingAssembly().GetName().Name + "." + name)?.CopyTo(stream);
-		return stream.Length == 0 ? null : stream.ToArray();
+		if (containingAssembly == null)
+		{
+			containingAssembly = Assembly.GetCallingAssembly();
+		}
+
+		string name = containingAssembly.GetManifestResourceNames().Single(str => str.EndsWith(resourceFileName));
+		using Stream manifestResourceStream = containingAssembly.GetManifestResourceStream(name);
+		byte[] array = ReadAllBytes(manifestResourceStream);
+			
+		if (array.Length == 0)
+		{
+			Debug.LogWarning(string.Format("The resource %1 was not found", resourceFileName));
+		}
+
+		return array;
+	}
+	
+	public static byte[] ReadAllBytes (Stream input)
+	{
+		byte[] array = new byte[16384];
+		using MemoryStream memoryStream = new();
+		int count;
+		while ((count = input.Read(array, 0, array.Length)) > 0)
+		{
+			memoryStream.Write(array, 0, count);
+		}
+		byte[] result = memoryStream.ToArray();
+		return result;
 	}
 }
