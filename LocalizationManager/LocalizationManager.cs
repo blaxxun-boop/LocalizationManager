@@ -8,6 +8,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using JetBrains.Annotations;
+using UnityEngine;
 using YamlDotNet.Serialization;
 
 namespace LocalizationManager;
@@ -113,7 +114,21 @@ public class Localizer
 		}
 		localizationLanguage.Add(__instance, language);
 
-		Dictionary<string, string> localizationFiles = Directory.GetFiles(Path.GetDirectoryName(Paths.PluginPath)!, $"{plugin.Info.Metadata.Name}.*", SearchOption.AllDirectories).Where(f => fileExtensions.IndexOf(Path.GetExtension(f)) >= 0).ToDictionary(f => Path.GetFileNameWithoutExtension(f).Split('.')[1], f => f);
+		Dictionary<string, string> localizationFiles = new Dictionary<string, string>();
+		foreach (var file in Directory.GetFiles(Path.GetDirectoryName(Paths.PluginPath)!, $"{plugin.Info.Metadata.Name}.*", SearchOption.AllDirectories).Where(f => fileExtensions.IndexOf(Path.GetExtension(f)) >= 0))
+		{
+			var key = Path.GetFileNameWithoutExtension(file).Split('.')[1];
+			if (localizationFiles.ContainsKey(key))
+			{
+				// Handle duplicate key
+				Debug.LogWarning($"Duplicate key {key} found for {plugin.Info.Metadata.Name}. The duplicate file will be skipped.");
+				Debug.LogWarning("Duplicate file was found at: " + file);
+			}
+			else
+			{
+				localizationFiles[key] = file;
+			}
+		}
 
 		if (LoadTranslationFromAssembly("English") is not { } englishAssemblyData)
 		{
