@@ -8,7 +8,6 @@ using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using JetBrains.Annotations;
-using UnityEngine;
 using YamlDotNet.Serialization;
 
 namespace LocalizationManager;
@@ -87,12 +86,9 @@ public class Localizer
 			if (reference.TryGetTarget(out Localization localization))
 			{
 				Dictionary<string, string> texts = loadedTexts[localizationLanguage.GetOrCreateValue(localization)];
-				if (!texts.ContainsKey(key))
+				if (!localization.m_translations.ContainsKey(key))
 				{
 					texts[key] = text;
-				}
-				if (texts[key] == text)
-				{
 					localization.AddWord(key, text);
 				}
 			}
@@ -181,35 +177,14 @@ public class Localizer
 		return null;
 	}
 
-	public static byte[]? ReadEmbeddedFileBytes(string resourceFileName, Assembly containingAssembly = null)
+	public static byte[]? ReadEmbeddedFileBytes(string resourceFileName, Assembly? containingAssembly = null)
 	{
-		if (containingAssembly == null)
+		using MemoryStream stream = new();
+		containingAssembly ??= Assembly.GetCallingAssembly();
+		if (containingAssembly.GetManifestResourceNames().FirstOrDefault(str => str.EndsWith(resourceFileName, StringComparison.Ordinal)) is { } name)
 		{
-			containingAssembly = Assembly.GetCallingAssembly();
+			containingAssembly.GetManifestResourceStream(name)?.CopyTo(stream);
 		}
-
-		string name = containingAssembly.GetManifestResourceNames().Single(str => str.EndsWith(resourceFileName));
-		using Stream manifestResourceStream = containingAssembly.GetManifestResourceStream(name);
-		byte[] array = ReadAllBytes(manifestResourceStream);
-			
-		if (array.Length == 0)
-		{
-			Debug.LogWarning(string.Format("The resource %1 was not found", resourceFileName));
-		}
-
-		return array;
-	}
-	
-	public static byte[] ReadAllBytes (Stream input)
-	{
-		byte[] array = new byte[16384];
-		using MemoryStream memoryStream = new();
-		int count;
-		while ((count = input.Read(array, 0, array.Length)) > 0)
-		{
-			memoryStream.Write(array, 0, count);
-		}
-		byte[] result = memoryStream.ToArray();
-		return result;
+		return stream.Length == 0 ? null : stream.ToArray();
 	}
 }
