@@ -113,7 +113,20 @@ public class Localizer
 		}
 		localizationLanguage.Add(__instance, language);
 
-		Dictionary<string, string> localizationFiles = Directory.GetFiles(Path.GetDirectoryName(Paths.PluginPath)!, $"{plugin.Info.Metadata.Name}.*", SearchOption.AllDirectories).Where(f => fileExtensions.IndexOf(Path.GetExtension(f)) >= 0).ToDictionary(f => Path.GetFileNameWithoutExtension(f).Split('.')[1], f => f);
+		Dictionary<string, string> localizationFiles = new();
+		foreach (string file in Directory.GetFiles(Path.GetDirectoryName(Paths.PluginPath)!, $"{plugin.Info.Metadata.Name}.*", SearchOption.AllDirectories).Where(f => fileExtensions.IndexOf(Path.GetExtension(f)) >= 0))
+		{
+			string key = Path.GetFileNameWithoutExtension(file).Split('.')[1];
+			if (localizationFiles.ContainsKey(key))
+			{
+				// Handle duplicate key
+				UnityEngine.Debug.LogWarning($"Duplicate key {key} found for {plugin.Info.Metadata.Name}. The duplicate file found at {file} will be skipped.");
+			}
+			else
+			{
+				localizationFiles[key] = file;
+			}
+		}
 
 		if (LoadTranslationFromAssembly("English") is not { } englishAssemblyData)
 		{
